@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parser</title>
+</head>
+<body>
+    <div style="text-align: center;">
+    <h2>Choose a file to parse its content</h2>
+    <form id="parseForm" >
+        <input type="file" id="inputFile" name="fileInput"  />
+        <button type="submit" onclick="handleClick()">Submit</button>
+    </form>
+    <pre id="downloadstatus"><i></i></pre>
+</div>
+    <script type="text/javascript">
+        function handleClick(){
+            const input = document.getElementById("inputFile");
+            let file = input.files[0];
+            let fr = new FileReader();
+            var content
+            fr.onload = function(){
+                content = fr.result;    //content of file
+                
+                const parser = new DOMParser();
+                const htmlDoc = parser.parseFromString(content, 'text/html');
+                let capState = htmlDoc.querySelectorAll("div ul li")
+                let SCdict = [];    //for storing capitals and states 
+                capState.forEach(item=>{
+                    const capital = item.querySelector('.capital').textContent.trim()
+                    const state = item.querySelector('.state').textContent.trim()
+                    SCdict.push({
+                        "capital" : capital,
+                        "state"   : state
+                    })
+                })
+
+                const finalData = { 
+                    "capitals":SCdict,
+                    "summary": {
+                        "numberOfCapitals" : SCdict.length
+                    }
+                }
+                const finalJSON = JSON.stringify(finalData,null,2);    //final JSON output with 2 spaces
+
+                var blob = new Blob([finalJSON],{type:"application/json"});  //stores json
+                var downloadLink = document.createElement("a");
+                downloadLink.download = 'results.json'   //name of the file
+                downloadLink.href=window.webkitURL.createObjectURL(blob) //sets href attribute for <a> tag
+                downloadLink.click(); //automatically triggers download
+                document.getElementById("downloadstatus").innerText = "downloaded successfully"
+            };
+            fr.readAsText(file) //initiates reading of the file contents
+            
+            
+        }
+        
+
+    </script>
+</body>
+</html>
